@@ -16,6 +16,7 @@ mod verify;
 #[structopt(name = "hashgood")]
 pub struct Opt {
     /// Read the hash from the clipboard
+    #[cfg(feature = "paste")]
     #[structopt(short = "p", long = "paste")]
     paste: bool,
 
@@ -34,6 +35,17 @@ pub struct Opt {
     /// A hash to verify, supplied directly on the command line
     #[structopt(name = "hash")]
     hash: Option<String>,
+}
+
+impl Opt {
+    fn get_paste(&self) -> bool {
+        #[cfg(feature = "paste")] {
+            return self.paste;
+        }
+        #[cfg(not(feature = "paste"))] {
+            return false;
+        }
+    }
 }
 
 /// Types of supported digest algorithm
@@ -179,12 +191,12 @@ fn hashgood() -> Result<(), Box<dyn Error>> {
 fn get_verified_options() -> Result<Opt, String> {
     let opt = Opt::from_args();
     let hash_methods =
-        opt.hash.is_some() as i32 + opt.paste as i32 + opt.hash_file.is_some() as i32;
+        opt.hash.is_some() as i32 + opt.get_paste() as i32 + opt.hash_file.is_some() as i32;
     if hash_methods > 1 {
         if opt.hash.is_some() {
             eprintln!("* specified as command line argument");
         }
-        if opt.paste {
+        if opt.get_paste() {
             eprintln!("* paste from clipboard (-p)")
         }
         if opt.hash_file.is_some() {

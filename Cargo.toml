@@ -10,5 +10,11 @@ hex = "0.4.0"
 rust-crypto = "0.2.36"
 crossbeam-channel = "0.4.0"
 termcolor = "1.0.5"
-clipboard = "0.5.0"
 regex = "1"
+
+[dependencies.clipboard]
+version = "0.5.0"
+optional = true
+
+[features]
+paste = ["clipboard"]
