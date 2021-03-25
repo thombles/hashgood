@@ -16,12 +16,27 @@ use std::thread::JoinHandle;
 pub type CalculateResult = Result<Vec<(Algorithm, Vec<u8>)>, Box<dyn Error>>;
 
 /// For a given path to the input (may be "-" for STDIN), try to obtain a reader for the data within it.
-pub fn get_input_reader(input: &PathBuf) -> Result<Box<dyn Read>, Box<dyn Error>> {
+pub fn get_input_reader(input: &PathBuf) -> Result<Box<dyn Read>, String> {
     if input.to_str() == Some("-") {
         // Special case: standard input
         return Ok(Box::new(std::io::stdin()));
     }
-    Ok(Box::new(File::open(input)?))
+    if !input.exists() {
+        return Err(format!(
+            "The path '{}' does not exist.",
+            input.to_string_lossy()
+        ));
+    }
+    if !input.is_file() {
+        return Err(format!(
+            "The path '{}' is not a regular file.",
+            input.to_string_lossy()
+        ));
+    }
+    match File::open(input) {
+        Ok(f) => Ok(Box::new(f)),
+        Err(e) => Err(format!("File open: {}", e)),
+    }
 }
 
 /// For the given input stream, calculate all requested digest types
