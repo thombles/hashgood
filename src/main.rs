@@ -39,10 +39,12 @@ pub struct Opt {
 
 impl Opt {
     fn get_paste(&self) -> bool {
-        #[cfg(feature = "paste")] {
+        #[cfg(feature = "paste")]
+        {
             return self.paste;
         }
-        #[cfg(not(feature = "paste"))] {
+        #[cfg(not(feature = "paste"))]
+        {
             return false;
         }
     }

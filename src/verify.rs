@@ -43,17 +43,18 @@ fn get_by_parameter(param: &str) -> Result<CandidateHashes, String> {
 
 /// Generate a candidate hash from the system clipboard, or throw an error.
 fn get_from_clipboard() -> Result<CandidateHashes, String> {
-    #[cfg(feature = "paste")] {
+    #[cfg(feature = "paste")]
+    {
         let mut ctx: ClipboardContext = match ClipboardProvider::new() {
             Ok(ctx) => ctx,
             Err(e) => return Err(format!("Error getting system clipboard: {}", e)),
         };
-    
+
         let possible_hash = match ctx.get_contents() {
             Ok(value) => value,
             Err(e) => format!("Error reading from clipboard: {}", e),
         };
-    
+
         let bytes = hex::decode(&possible_hash)
             .map_err(|_| "Clipboard contains invalid or truncated hex".to_owned())?;
         let alg = Algorithm::from_len(bytes.len())?;
@@ -67,7 +68,8 @@ fn get_from_clipboard() -> Result<CandidateHashes, String> {
             source: VerificationSource::Clipboard,
         });
     }
-    #[cfg(not(feature = "paste"))] {
+    #[cfg(not(feature = "paste"))]
+    {
         return Err("Paste not implemented".to_owned());
     }
 }
