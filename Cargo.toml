@@ -9,7 +9,7 @@ structopt = "0.3.4"
 hex = "0.4.0"
 rust-crypto = "0.2.36"
 crossbeam-channel = "0.4.0"
-termcolor = "1.0.5"
+termcolor = "1.0.12"
 regex = "1"
 
 [dependencies.clipboard]
