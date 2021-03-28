@@ -281,3 +281,56 @@ pub fn verify_hash<'a>(calculated: &Hash, candidates: &'a CandidateHashes) -> Ve
         messages,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_read_raw_inputs() {
+        let example_path: PathBuf = "some_file".into();
+        let valid_md5 = "d229da563da18fe5d58cd95a6467d584";
+        let valid_sha1 = "b314c7ebb7d599944981908b7f3ed33a30e78f3a";
+        let valid_sha1_2 = valid_sha1.to_uppercase();
+        let valid_sha256 = "1eb85fc97224598dad1852b5d6483bbcf0aa8608790dcc657a5a2a761ae9c8c6";
+
+        let invalid1 = "x";
+        let invalid2 = "a";
+        let invalid3 = "d229da563da18fe5d58cd95a6467d58";
+        let invalid4 = "1eb85fc97224598dad1852b5d6483bbcf0aa8608790dcc657a5a2a761ae9c8c67";
+        let invalid5 = "1eb85fc97224598dad1852b5d 483bbcf0aa8608790dcc657a5a2a761ae9c8c6";
+
+        assert!(matches!(
+            read_raw_candidate_from_file(valid_md5, &example_path),
+            Some(CandidateHashes {
+                alg: Algorithm::Md5,
+                ..
+            })
+        ));
+        assert!(matches!(
+            read_raw_candidate_from_file(valid_sha1, &example_path),
+            Some(CandidateHashes {
+                alg: Algorithm::Sha1,
+                ..
+            })
+        ));
+        assert!(matches!(
+            read_raw_candidate_from_file(&valid_sha1_2, &example_path),
+            Some(CandidateHashes {
+                alg: Algorithm::Sha1,
+                ..
+            })
+        ));
+        assert!(matches!(
+            read_raw_candidate_from_file(valid_sha256, &example_path),
+            Some(CandidateHashes {
+                alg: Algorithm::Sha256,
+                ..
+            })
+        ));
+
+        for i in &[invalid1, invalid2, invalid3, invalid4, invalid5] {
+            assert!(read_raw_candidate_from_file(*i, &example_path).is_none());
+        }
+    }
+}
