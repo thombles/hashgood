@@ -23,11 +23,11 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-      include:
-        - os: windows-latest
-          features: paste
-        - os: macos-latest
-          features: paste
+        include:
+          - os: windows-latest
+            features: paste
+          - os: macos-latest
+            features: paste
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
