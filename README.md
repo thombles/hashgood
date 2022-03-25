@@ -17,6 +17,10 @@ Read the MD5, SHA1 or SHA256 hash from:
 
 This program arose from dissatisfaction with the [workarounds required for traditional tools](https://thomask.sdf.org/blog/2019/05/05/techniques-for-verifying-shasums-conveniently.html).
 
+## Installing
+
+Pre-compiled binaries for common platforms can be downloaded [from the releases page](https://github.com/thombles/hashgood/releases). Otherwise you can build it yourself; see the next section.
+
 ## Compiling
 
 `hashgood` targets stable Rust. With a Rust toolchain installed, clone the repository and run:
