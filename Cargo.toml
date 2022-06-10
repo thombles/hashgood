@@ -11,9 +11,9 @@ rust-crypto = "0.2.36"
 crossbeam-channel = "0.5"
 termcolor = "1.1"
 
-[dependencies.clipboard]
-version = "0.5.0"
+[dependencies.copypasta]
+version = "0.7.1"
 optional = true
 
 [features]
-paste = ["clipboard"]
+paste = ["copypasta"]

@@ -3,7 +3,7 @@ use super::{
     VerificationSource,
 };
 #[cfg(feature = "paste")]
-use clipboard::{ClipboardContext, ClipboardProvider};
+use copypasta::{ClipboardContext, ClipboardProvider};
 use std::fs::File;
 use std::io;
 use std::io::prelude::*;
@@ -44,7 +44,7 @@ fn get_by_parameter(param: &str) -> Result<CandidateHashes, String> {
 fn get_from_clipboard() -> Result<CandidateHashes, String> {
     #[cfg(feature = "paste")]
     {
-        let mut ctx: ClipboardContext = match ClipboardProvider::new() {
+        let mut ctx: ClipboardContext = match ClipboardContext::new() {
             Ok(ctx) => ctx,
             Err(e) => return Err(format!("Error getting system clipboard: {}", e)),
         };
