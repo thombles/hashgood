@@ -4,7 +4,6 @@ use super::{
 };
 #[cfg(feature = "paste")]
 use clipboard::{ClipboardContext, ClipboardProvider};
-use regex::Regex;
 use std::fs::File;
 use std::io;
 use std::io::prelude::*;
@@ -118,80 +117,70 @@ fn get_from_file(path: &PathBuf) -> Result<CandidateHashes, String> {
     ))
 }
 
-fn read_raw_candidate_from_file(line: &str, path: &PathBuf) -> Option<CandidateHashes> {
-    // It is a little sad to use a dynamic regex in an otherwise nice Rust program
-    // These deserve to be replaced with a good old fashioned static parser
-    // But let's be honest: the impact is negligible
-    let re = Regex::new(r"^([[:xdigit:]]{32}|[[:xdigit:]]{40}|[[:xdigit:]]{64})$").unwrap();
-    if re.is_match(line) {
-        // These should both always succeed due to the matching
-        let bytes = match hex::decode(line) {
-            Ok(bytes) => bytes,
-            _ => return None,
-        };
-        let alg = match Algorithm::from_len(bytes.len()) {
-            Ok(alg) => alg,
-            _ => return None,
-        };
-        return Some(CandidateHashes {
-            alg,
-            source: VerificationSource::RawFile(path.clone()),
-            hashes: vec![CandidateHash {
-                bytes,
-                filename: None,
-            }],
-        });
-    }
-    None
+fn try_parse_hash(s: &str) -> Option<(Algorithm, Vec<u8>)> {
+    let bytes = match hex::decode(s.trim()) {
+        Ok(bytes) => bytes,
+        _ => return None,
+    };
+    let alg = match Algorithm::from_len(bytes.len()) {
+        Ok(alg) => alg,
+        _ => return None,
+    };
+    Some((alg, bytes))
 }
 
-fn read_coreutils_digests_from_file<I>(lines: I, path: &PathBuf) -> Option<CandidateHashes>
-where
-    I: Iterator<Item = io::Result<String>>,
-{
-    let re = Regex::new(
-        r"^(?P<hash>([[:xdigit:]]{32}|[[:xdigit:]]{40}|[[:xdigit:]]{64})) .(?P<filename>.+)$",
-    )
-    .unwrap();
+fn read_raw_candidate_from_file(line: &str, path: &PathBuf) -> Option<CandidateHashes> {
+    let (alg, bytes) = try_parse_hash(line)?;
+    Some(CandidateHashes {
+        alg,
+        source: VerificationSource::RawFile(path.clone()),
+        hashes: vec![CandidateHash {
+            bytes,
+            filename: None,
+        }],
+    })
+}
 
+fn read_coreutils_digests_from_file<I, S>(lines: I, path: &PathBuf) -> Option<CandidateHashes>
+where
+    I: Iterator<Item = io::Result<S>>,
+    S: AsRef<str>,
+{
     let mut hashes = vec![];
     let mut alg: Option<Algorithm> = None;
     for l in lines {
         if let Ok(l) = l {
-            let l = l.trim();
+            let l = l.as_ref().trim();
             // Allow (ignore) blank lines
             if l.is_empty() {
                 continue;
             }
-            // If we can capture a valid line, use it
-            if let Some(captures) = re.captures(&l) {
-                let hash = &captures["hash"];
-                let filename = &captures["filename"];
-                // Decode the hex and algorithm for this line
-                let line_bytes = match hex::decode(hash) {
-                    Ok(bytes) => bytes,
-                    _ => return None,
-                };
-                let line_alg = match Algorithm::from_len(line_bytes.len()) {
-                    Ok(alg) => alg,
-                    _ => return None,
-                };
-                if alg.is_some() && alg != Some(line_alg) {
-                    // Different algorithms in the same digest file are not supported
+            // Expected format
+            // <valid-hash><space><space-or-*><filename>
+            let (line_alg, bytes, filename) = match l
+                .find(' ')
+                .and_then(|space_pos| (l.get(0..space_pos)).zip(l.get(space_pos + 2..)))
+                .and_then(|(maybe_hash, filename)| {
+                    try_parse_hash(maybe_hash).map(|(alg, bytes)| (alg, bytes, filename))
+                }) {
+                Some(t) => t,
+                None => {
+                    // if we have a line with content we cannot parse, this is an error
                     return None;
-                } else {
-                    // If we are the first line, we define the overall algorithm
-                    alg = Some(line_alg);
                 }
-                // So far so good - create an entry for this line
-                hashes.push(CandidateHash {
-                    bytes: line_bytes,
-                    filename: Some(filename.to_owned()),
-                });
-            } else {
-                // But if we have a line with content we cannot parse, this is an error
+            };
+            if alg.is_some() && alg != Some(line_alg) {
+                // Different algorithms in the same digest file are not supported
                 return None;
+            } else {
+                // If we are the first line, we define the overall algorithm
+                alg = Some(line_alg);
             }
+            // So far so good - create an entry for this line
+            hashes.push(CandidateHash {
+                bytes,
+                filename: Some(filename.to_owned()),
+            });
         }
     }
 
@@ -284,6 +273,8 @@ pub fn verify_hash<'a>(calculated: &Hash, candidates: &'a CandidateHashes) -> Ve
 
 #[cfg(test)]
 mod tests {
+    use std::path::Path;
+
     use super::*;
 
     #[test]
@@ -332,5 +323,38 @@ mod tests {
         for i in &[invalid1, invalid2, invalid3, invalid4, invalid5] {
             assert!(read_raw_candidate_from_file(*i, &example_path).is_none());
         }
+    }
+
+    #[test]
+    fn test_read_shasums() {
+        let shasums = "4b91f7a387a6edd4a7c0afb2897f1ca968c9695b *cp
+        75eb7420a9f5a260b04a3e8ad51e50f2838a17fc  lel.txt
+
+        fe6c26d485a3573a1cb0ad0682f5105325a1905f  shasums";
+        let lines = shasums.lines().map(|l| std::io::Result::Ok(l));
+        let path = Path::new("SHASUMS").to_owned();
+        let candidates = read_coreutils_digests_from_file(lines, &path);
+
+        assert_eq!(
+            candidates,
+            Some(CandidateHashes {
+                alg: Algorithm::Sha1,
+                hashes: vec![
+                    CandidateHash {
+                        bytes: hex::decode("4b91f7a387a6edd4a7c0afb2897f1ca968c9695b").unwrap(),
+                        filename: Some("cp".to_owned()),
+                    },
+                    CandidateHash {
+                        bytes: hex::decode("75eb7420a9f5a260b04a3e8ad51e50f2838a17fc").unwrap(),
+                        filename: Some("lel.txt".to_owned()),
+                    },
+                    CandidateHash {
+                        bytes: hex::decode("fe6c26d485a3573a1cb0ad0682f5105325a1905f").unwrap(),
+                        filename: Some("shasums".to_owned()),
+                    }
+                ],
+                source: VerificationSource::DigestsFile(path),
+            })
+        );
     }
 }

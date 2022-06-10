@@ -71,6 +71,7 @@ impl Algorithm {
 }
 
 /// The method by which one or more hashes were supplied to verify the calculated digest
+#[derive(Debug, PartialEq)]
 pub enum VerificationSource {
     CommandArgument,
     Clipboard,
@@ -102,6 +103,7 @@ impl Hash {
 }
 
 /// A possible hash to match against. The algorithm is assumed.
+#[derive(Debug, PartialEq)]
 pub struct CandidateHash {
     bytes: Vec<u8>,
     filename: Option<String>,
@@ -109,6 +111,7 @@ pub struct CandidateHash {
 
 /// A list of candidate hashes that our input could potentially match. At this point it is
 /// assumed that we will be verifying a digest of a particular, single algorithm.
+#[derive(Debug, PartialEq)]
 pub struct CandidateHashes {
     alg: Algorithm,
     hashes: Vec<CandidateHash>,
