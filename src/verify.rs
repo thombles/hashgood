@@ -159,9 +159,20 @@ where
             // <valid-hash><space><space-or-*><filename>
             let (line_alg, bytes, filename) = match l
                 .find(' ')
-                .and_then(|space_pos| (l.get(0..space_pos)).zip(l.get(space_pos + 2..)))
+                .and_then(|space_pos| {
+                    // Char before filename should be space for text or * for binary
+                    match l.chars().nth(space_pos + 1) {
+                        Some(' ') | Some('*') => (l.get(..space_pos)).zip(l.get(space_pos + 2..)),
+                        _ => None,
+                    }
+                })
                 .and_then(|(maybe_hash, filename)| {
-                    try_parse_hash(maybe_hash).map(|(alg, bytes)| (alg, bytes, filename))
+                    // Filename should be in this position without extra whitespace
+                    if filename.trim() == filename {
+                        try_parse_hash(maybe_hash).map(|(alg, bytes)| (alg, bytes, filename))
+                    } else {
+                        None
+                    }
                 }) {
                 Some(t) => t,
                 None => {
@@ -273,8 +284,6 @@ pub fn verify_hash<'a>(calculated: &Hash, candidates: &'a CandidateHashes) -> Ve
 
 #[cfg(test)]
 mod tests {
-    use std::path::Path;
-
     use super::*;
 
     #[test]
@@ -332,7 +341,7 @@ mod tests {
 
         fe6c26d485a3573a1cb0ad0682f5105325a1905f  shasums";
         let lines = shasums.lines().map(|l| std::io::Result::Ok(l));
-        let path = Path::new("SHASUMS").to_owned();
+        let path = PathBuf::from("SHASUMS");
         let candidates = read_coreutils_digests_from_file(lines, &path);
 
         assert_eq!(
@@ -356,5 +365,21 @@ mod tests {
                 source: VerificationSource::DigestsFile(path),
             })
         );
+    }
+
+    #[test]
+    fn test_invalid_shasums() {
+        let no_format = "4b91f7a387a6edd4a7c0afb2897f1ca968c9695b cp";
+        let invalid_format = "4b91f7a387a6edd4a7c0afb2897f1ca968c9695b .cp";
+        let extra_space = "4b91f7a387a6edd4a7c0afb2897f1ca968c9695b   cp";
+
+        for digest in [no_format, invalid_format, extra_space] {
+            let lines = digest.lines().map(|l| std::io::Result::Ok(l));
+            assert!(
+                read_coreutils_digests_from_file(lines, &PathBuf::from("SHASUMS")).is_none(),
+                "Should be invalid digest: {:?}",
+                digest
+            );
+        }
     }
 }
