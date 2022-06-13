@@ -1,5 +1,5 @@
 use std::error::Error;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process;
 use structopt::StructOpt;
 
@@ -75,8 +75,8 @@ impl Algorithm {
 pub enum VerificationSource {
     CommandArgument,
     Clipboard,
-    RawFile(PathBuf),
-    DigestsFile(PathBuf),
+    RawFile(String),
+    DigestsFile(String),
 }
 
 /// A complete standalone hash result
@@ -87,7 +87,7 @@ pub struct Hash {
 }
 
 impl Hash {
-    pub fn new(alg: Algorithm, bytes: Vec<u8>, path: &PathBuf) -> Self {
+    pub fn new(alg: Algorithm, bytes: Vec<u8>, path: &Path) -> Self {
         // Taking the filename component should always work?
         // If not, just fall back to the full path
         let filename = match path.file_name() {
@@ -155,7 +155,7 @@ fn main() {
 fn hashgood() -> Result<(), Box<dyn Error>> {
     let opt = get_verified_options()?;
     let candidates = verify::get_candidate_hashes(&opt)?;
-    let input = calculate::get_input_reader(&opt.input)?;
+    let input = calculate::get_input_reader(opt.input.as_path())?;
     if let Some(c) = candidates {
         // If we have a candidate hash of a particular type, use that specific algorithm
         let hashes = calculate::create_digests(&[c.alg], input)?;

@@ -8,7 +8,7 @@ use std::fs::File;
 use std::io;
 use std::io::prelude::*;
 use std::io::BufReader;
-use std::path::PathBuf;
+use std::path::Path;
 
 /// Calculate a list of candidate hashes based on the options specified.
 /// If no hash options have been specified returns None.
@@ -74,7 +74,7 @@ fn get_from_clipboard() -> Result<CandidateHashes, String> {
 }
 
 /// Generate a candidate hash from the digests file specified (could be "-" for STDIN), or throw an error.
-fn get_from_file(path: &PathBuf) -> Result<CandidateHashes, String> {
+fn get_from_file(path: &Path) -> Result<CandidateHashes, String> {
     // Get a reader for either standard input or the chosen path
     let reader: Box<dyn Read> = if path.to_str() == Some("-") {
         Box::new(std::io::stdin())
@@ -129,11 +129,11 @@ fn try_parse_hash(s: &str) -> Option<(Algorithm, Vec<u8>)> {
     Some((alg, bytes))
 }
 
-fn read_raw_candidate_from_file(line: &str, path: &PathBuf) -> Option<CandidateHashes> {
+fn read_raw_candidate_from_file(line: &str, path: &Path) -> Option<CandidateHashes> {
     let (alg, bytes) = try_parse_hash(line)?;
     Some(CandidateHashes {
         alg,
-        source: VerificationSource::RawFile(path.clone()),
+        source: VerificationSource::RawFile(path.to_string_lossy().to_string()),
         hashes: vec![CandidateHash {
             bytes,
             filename: None,
@@ -141,7 +141,7 @@ fn read_raw_candidate_from_file(line: &str, path: &PathBuf) -> Option<CandidateH
     })
 }
 
-fn read_coreutils_digests_from_file<I, S>(lines: I, path: &PathBuf) -> Option<CandidateHashes>
+fn read_coreutils_digests_from_file<I, S>(lines: I, path: &Path) -> Option<CandidateHashes>
 where
     I: Iterator<Item = io::Result<S>>,
     S: AsRef<str>,
@@ -207,7 +207,7 @@ where
     // Otherwise all is well and we can return our results
     Some(CandidateHashes {
         alg,
-        source: VerificationSource::DigestsFile(path.clone()),
+        source: VerificationSource::DigestsFile(path.to_string_lossy().to_string()),
         hashes,
     })
 }
@@ -288,7 +288,7 @@ mod tests {
 
     #[test]
     fn test_read_raw_inputs() {
-        let example_path: PathBuf = "some_file".into();
+        let example_path = Path::new("some_file");
         let valid_md5 = "d229da563da18fe5d58cd95a6467d584";
         let valid_sha1 = "b314c7ebb7d599944981908b7f3ed33a30e78f3a";
         let valid_sha1_2 = valid_sha1.to_uppercase();
@@ -341,7 +341,7 @@ mod tests {
 
         fe6c26d485a3573a1cb0ad0682f5105325a1905f  shasums";
         let lines = shasums.lines().map(|l| std::io::Result::Ok(l));
-        let path = PathBuf::from("SHASUMS");
+        let path = Path::new("SHASUMS");
         let candidates = read_coreutils_digests_from_file(lines, &path);
 
         assert_eq!(
@@ -362,7 +362,7 @@ mod tests {
                         filename: Some("shasums".to_owned()),
                     }
                 ],
-                source: VerificationSource::DigestsFile(path),
+                source: VerificationSource::DigestsFile(path.to_string_lossy().to_string()),
             })
         );
     }
@@ -376,7 +376,7 @@ mod tests {
         for digest in [no_format, invalid_format, extra_space] {
             let lines = digest.lines().map(|l| std::io::Result::Ok(l));
             assert!(
-                read_coreutils_digests_from_file(lines, &PathBuf::from("SHASUMS")).is_none(),
+                read_coreutils_digests_from_file(lines, Path::new("SHASUMS")).is_none(),
                 "Should be invalid digest: {:?}",
                 digest
             );

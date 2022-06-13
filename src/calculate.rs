@@ -8,7 +8,7 @@ use crypto::sha2::Sha256;
 use std::error::Error;
 use std::fs::File;
 use std::io::prelude::*;
-use std::path::PathBuf;
+use std::path::Path;
 use std::sync::Arc;
 use std::thread;
 use std::thread::JoinHandle;
@@ -16,7 +16,7 @@ use std::thread::JoinHandle;
 pub type CalculateResult = Result<Vec<(Algorithm, Vec<u8>)>, Box<dyn Error>>;
 
 /// For a given path to the input (may be "-" for STDIN), try to obtain a reader for the data within it.
-pub fn get_input_reader(input: &PathBuf) -> Result<Box<dyn Read>, String> {
+pub fn get_input_reader(input: &Path) -> Result<Box<dyn Read>, String> {
     if input.to_str() == Some("-") {
         // Special case: standard input
         return Ok(Box::new(std::io::stdin()));

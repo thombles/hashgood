@@ -1,5 +1,4 @@
 use super::{Algorithm, CandidateHash, Hash, MatchLevel, MessageLevel, VerificationSource};
-use std::borrow::Borrow;
 use std::error::Error;
 use std::io::Write;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
@@ -74,7 +73,7 @@ fn write_source(
         VerificationSource::Clipboard => {
             writeln!(&mut stdout, "pasted from clipboard")?;
         }
-        VerificationSource::RawFile(raw_path) => match raw_path.to_string_lossy().borrow() {
+        VerificationSource::RawFile(raw_path) => match raw_path.as_str() {
             "-" => {
                 writeln!(&mut stdout, "from standard input")?;
             }
@@ -82,25 +81,23 @@ fn write_source(
                 writeln!(&mut stdout, "from file '{}' containing raw hash", path)?;
             }
         },
-        VerificationSource::DigestsFile(digest_path) => {
-            match digest_path.to_string_lossy().borrow() {
-                "-" => {
-                    writeln!(
-                        &mut stdout,
-                        "'{}' from digests on standard input",
-                        candidate_filename.as_ref().unwrap()
-                    )?;
-                }
-                path => {
-                    writeln!(
-                        &mut stdout,
-                        "'{}' in digests file '{}'",
-                        candidate_filename.as_ref().unwrap(),
-                        path
-                    )?;
-                }
+        VerificationSource::DigestsFile(digest_path) => match digest_path.as_str() {
+            "-" => {
+                writeln!(
+                    &mut stdout,
+                    "'{}' from digests on standard input",
+                    candidate_filename.as_ref().unwrap()
+                )?;
             }
-        }
+            path => {
+                writeln!(
+                    &mut stdout,
+                    "'{}' in digests file '{}'",
+                    candidate_filename.as_ref().unwrap(),
+                    path
+                )?;
+            }
+        },
     }
     stdout.reset()?;
     Ok(())
