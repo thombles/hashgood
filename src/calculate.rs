@@ -125,22 +125,22 @@ mod tests {
     use super::*;
     use std::io::Cursor;
 
-    const SMALL_DATA: [u8; 10] = ['A' as u8; 10];
+    static SMALL_DATA: [u8; 10] = [b'A'; 10];
     // python3 -c 'print ("A"*10, end="", flush=True)' | md5sum
-    const SMALL_DATA_MD5: &'static str = "16c52c6e8326c071da771e66dc6e9e57";
+    static SMALL_DATA_MD5: &str = "16c52c6e8326c071da771e66dc6e9e57";
     // python3 -c 'print ("A"*10, end="", flush=True)' | sha1sum
-    const SMALL_DATA_SHA1: &'static str = "c71613a7386fd67995708464bf0223c0d78225c4";
+    static SMALL_DATA_SHA1: &str = "c71613a7386fd67995708464bf0223c0d78225c4";
     // python3 -c 'print ("A"*10, end="", flush=True)' | sha256sum
-    const SMALL_DATA_SHA256: &'static str =
+    static SMALL_DATA_SHA256: &str =
         "1d65bf29403e4fb1767522a107c827b8884d16640cf0e3b18c4c1dd107e0d49d";
 
-    const LARGE_DATA: [u8; 1_000_000] = ['B' as u8; 1_000_000];
+    static LARGE_DATA: [u8; 1_000_000] = [b'B'; 1_000_000];
     // python3 -c 'print ("B"*1000000, end="", flush=True)' | md5sum
-    const LARGE_DATA_MD5: &'static str = "9171f6d67a87ca649a702434a03458a1";
+    static LARGE_DATA_MD5: &str = "9171f6d67a87ca649a702434a03458a1";
     // python3 -c 'print ("B"*1000000, end="", flush=True)' | sha1sum
-    const LARGE_DATA_SHA1: &'static str = "cfae4cebfd01884111bdede7cf983626bb249c94";
+    static LARGE_DATA_SHA1: &str = "cfae4cebfd01884111bdede7cf983626bb249c94";
     // python3 -c 'print ("B"*1000000, end="", flush=True)' | sha256sum
-    const LARGE_DATA_SHA256: &'static str =
+    static LARGE_DATA_SHA256: &str =
         "b9193853f7798e92e2f6b82eda336fa7d6fc0fa90fdefe665f372b0bad8cdf8c";
 
     fn verify_digest(alg: Algorithm, data: &'static [u8], hash: &str) {
@@ -154,9 +154,9 @@ mod tests {
     /// of test data (single block).
     #[test]
     fn small_digests() {
-        verify_digest(Algorithm::Md5, &SMALL_DATA, &SMALL_DATA_MD5);
-        verify_digest(Algorithm::Sha1, &SMALL_DATA, &SMALL_DATA_SHA1);
-        verify_digest(Algorithm::Sha256, &SMALL_DATA, &SMALL_DATA_SHA256);
+        verify_digest(Algorithm::Md5, &SMALL_DATA, SMALL_DATA_MD5);
+        verify_digest(Algorithm::Sha1, &SMALL_DATA, SMALL_DATA_SHA1);
+        verify_digest(Algorithm::Sha256, &SMALL_DATA, SMALL_DATA_SHA256);
     }
 
     /// Assert that digests for all algorithms are calculated correctly for a large piece
@@ -165,8 +165,8 @@ mod tests {
     /// 1 MiB means that the final block will be slightly smaller than the others.
     #[test]
     fn large_digests() {
-        verify_digest(Algorithm::Md5, &LARGE_DATA, &LARGE_DATA_MD5);
-        verify_digest(Algorithm::Sha1, &LARGE_DATA, &LARGE_DATA_SHA1);
-        verify_digest(Algorithm::Sha256, &LARGE_DATA, &LARGE_DATA_SHA256);
+        verify_digest(Algorithm::Md5, &LARGE_DATA, LARGE_DATA_MD5);
+        verify_digest(Algorithm::Sha1, &LARGE_DATA, LARGE_DATA_SHA1);
+        verify_digest(Algorithm::Sha256, &LARGE_DATA, LARGE_DATA_SHA256);
     }
 }

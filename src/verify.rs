@@ -299,28 +299,28 @@ mod tests {
         let invalid5 = "1eb85fc97224598dad1852b5d 483bbcf0aa8608790dcc657a5a2a761ae9c8c6";
 
         assert!(matches!(
-            read_raw_candidate_from_file(valid_md5, &example_path),
+            read_raw_candidate_from_file(valid_md5, example_path),
             Some(CandidateHashes {
                 alg: Algorithm::Md5,
                 ..
             })
         ));
         assert!(matches!(
-            read_raw_candidate_from_file(valid_sha1, &example_path),
+            read_raw_candidate_from_file(valid_sha1, example_path),
             Some(CandidateHashes {
                 alg: Algorithm::Sha1,
                 ..
             })
         ));
         assert!(matches!(
-            read_raw_candidate_from_file(&valid_sha1_2, &example_path),
+            read_raw_candidate_from_file(&valid_sha1_2, example_path),
             Some(CandidateHashes {
                 alg: Algorithm::Sha1,
                 ..
             })
         ));
         assert!(matches!(
-            read_raw_candidate_from_file(valid_sha256, &example_path),
+            read_raw_candidate_from_file(valid_sha256, example_path),
             Some(CandidateHashes {
                 alg: Algorithm::Sha256,
                 ..
@@ -328,7 +328,7 @@ mod tests {
         ));
 
         for i in &[invalid1, invalid2, invalid3, invalid4, invalid5] {
-            assert!(read_raw_candidate_from_file(*i, &example_path).is_none());
+            assert!(read_raw_candidate_from_file(*i, example_path).is_none());
         }
     }
 
@@ -338,9 +338,9 @@ mod tests {
         75eb7420a9f5a260b04a3e8ad51e50f2838a17fc  lel.txt
 
         fe6c26d485a3573a1cb0ad0682f5105325a1905f  shasums";
-        let lines = shasums.lines().map(|l| std::io::Result::Ok(l));
+        let lines = shasums.lines().map(std::io::Result::Ok);
         let path = Path::new("SHASUMS");
-        let candidates = read_coreutils_digests_from_file(lines, &path);
+        let candidates = read_coreutils_digests_from_file(lines, path);
 
         assert_eq!(
             candidates,
@@ -372,7 +372,7 @@ mod tests {
         let extra_space = "4b91f7a387a6edd4a7c0afb2897f1ca968c9695b   cp";
 
         for digest in [no_format, invalid_format, extra_space] {
-            let lines = digest.lines().map(|l| std::io::Result::Ok(l));
+            let lines = digest.lines().map(std::io::Result::Ok);
             assert!(
                 read_coreutils_digests_from_file(lines, Path::new("SHASUMS")).is_none(),
                 "Should be invalid digest: {:?}",
