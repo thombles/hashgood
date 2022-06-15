@@ -2,7 +2,7 @@
 name = "hashgood"
 version = "0.2.0"
 authors = ["Thomas Karpiniec <tkarpiniec@icloud.com>"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 structopt = "0.3.4"
