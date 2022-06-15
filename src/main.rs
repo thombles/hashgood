@@ -41,11 +41,11 @@ impl Opt {
     fn get_paste(&self) -> bool {
         #[cfg(feature = "paste")]
         {
-            return self.paste;
+            self.paste
         }
         #[cfg(not(feature = "paste"))]
         {
-            return false;
+            false
         }
     }
 }

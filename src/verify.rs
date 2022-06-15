@@ -61,15 +61,15 @@ fn get_from_clipboard() -> Result<CandidateHashes, String> {
             filename: None,
             bytes,
         };
-        return Ok(CandidateHashes {
+        Ok(CandidateHashes {
             alg,
             hashes: vec![candidate],
             source: VerificationSource::Clipboard,
-        });
+        })
     }
     #[cfg(not(feature = "paste"))]
     {
-        return Err("Paste not implemented".to_owned());
+        Err("Paste not implemented".to_owned())
     }
 }
 
@@ -96,7 +96,7 @@ fn get_from_file(path: &Path) -> Result<CandidateHashes, String> {
     let line = line.trim().to_owned();
 
     // Does our first line look like a raw hash on its own? If so, use that
-    if let Some(candidate) = read_raw_candidate_from_file(&line, &path) {
+    if let Some(candidate) = read_raw_candidate_from_file(&line, path) {
         return Ok(candidate);
     }
 
@@ -105,7 +105,7 @@ fn get_from_file(path: &Path) -> Result<CandidateHashes, String> {
     let full_lines = vec![Ok(line)].into_iter().chain(reader.lines());
 
     // Does the entire file look like a coreutils-style digests file? (SHA1SUMS, etc.)
-    if let Some(candidate) = read_coreutils_digests_from_file(full_lines, &path) {
+    if let Some(candidate) = read_coreutils_digests_from_file(full_lines, path) {
         return Ok(candidate);
     }
 
@@ -148,51 +148,49 @@ where
 {
     let mut hashes = vec![];
     let mut alg: Option<Algorithm> = None;
-    for l in lines {
-        if let Ok(l) = l {
-            let l = l.as_ref().trim();
-            // Allow (ignore) blank lines
-            if l.is_empty() {
-                continue;
-            }
-            // Expected format
-            // <valid-hash><space><space-or-*><filename>
-            let (line_alg, bytes, filename) = match l
-                .find(' ')
-                .and_then(|space_pos| {
-                    // Char before filename should be space for text or * for binary
-                    match l.chars().nth(space_pos + 1) {
-                        Some(' ') | Some('*') => (l.get(..space_pos)).zip(l.get(space_pos + 2..)),
-                        _ => None,
-                    }
-                })
-                .and_then(|(maybe_hash, filename)| {
-                    // Filename should be in this position without extra whitespace
-                    if filename.trim() == filename {
-                        try_parse_hash(maybe_hash).map(|(alg, bytes)| (alg, bytes, filename))
-                    } else {
-                        None
-                    }
-                }) {
-                Some(t) => t,
-                None => {
-                    // if we have a line with content we cannot parse, this is an error
-                    return None;
-                }
-            };
-            if alg.is_some() && alg != Some(line_alg) {
-                // Different algorithms in the same digest file are not supported
-                return None;
-            } else {
-                // If we are the first line, we define the overall algorithm
-                alg = Some(line_alg);
-            }
-            // So far so good - create an entry for this line
-            hashes.push(CandidateHash {
-                bytes,
-                filename: Some(filename.to_owned()),
-            });
+    for l in lines.flatten() {
+        let l = l.as_ref().trim();
+        // Allow (ignore) blank lines
+        if l.is_empty() {
+            continue;
         }
+        // Expected format
+        // <valid-hash><space><space-or-*><filename>
+        let (line_alg, bytes, filename) = match l
+            .find(' ')
+            .and_then(|space_pos| {
+                // Char before filename should be space for text or * for binary
+                match l.chars().nth(space_pos + 1) {
+                    Some(' ') | Some('*') => (l.get(..space_pos)).zip(l.get(space_pos + 2..)),
+                    _ => None,
+                }
+            })
+            .and_then(|(maybe_hash, filename)| {
+                // Filename should be in this position without extra whitespace
+                if filename.trim() == filename {
+                    try_parse_hash(maybe_hash).map(|(alg, bytes)| (alg, bytes, filename))
+                } else {
+                    None
+                }
+            }) {
+            Some(t) => t,
+            None => {
+                // if we have a line with content we cannot parse, this is an error
+                return None;
+            }
+        };
+        if alg.is_some() && alg != Some(line_alg) {
+            // Different algorithms in the same digest file are not supported
+            return None;
+        } else {
+            // If we are the first line, we define the overall algorithm
+            alg = Some(line_alg);
+        }
+        // So far so good - create an entry for this line
+        hashes.push(CandidateHash {
+            bytes,
+            filename: Some(filename.to_owned()),
+        });
     }
 
     // It is a failure if we got zero hashes or we somehow don't know the algorithm
