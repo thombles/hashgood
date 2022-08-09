@@ -1,10 +1,9 @@
 use super::Algorithm;
 use crossbeam_channel::bounded;
 use crossbeam_channel::Receiver;
-use crypto::digest::Digest;
-use crypto::md5::Md5;
-use crypto::sha1::Sha1;
-use crypto::sha2::Sha256;
+use md5::{Digest, Md5};
+use sha1::Sha1;
+use sha2::Sha256;
 use std::error::Error;
 use std::fs::File;
 use std::io::prelude::*;
@@ -86,10 +85,9 @@ fn md5_digest(rx: Receiver<Arc<Vec<u8>>>) -> JoinHandle<(Algorithm, Vec<u8>)> {
     thread::spawn(move || {
         let mut md5 = Md5::new();
         while let Ok(chunk) = rx.recv() {
-            md5.input(&chunk);
+            md5.update(&*chunk);
         }
-        let mut result = [0; 16];
-        md5.result(&mut result);
+        let result = md5.finalize();
         (Algorithm::Md5, result.to_vec())
     })
 }
@@ -99,10 +97,9 @@ fn sha1_digest(rx: Receiver<Arc<Vec<u8>>>) -> JoinHandle<(Algorithm, Vec<u8>)> {
     thread::spawn(move || {
         let mut sha1 = Sha1::new();
         while let Ok(chunk) = rx.recv() {
-            sha1.input(&chunk);
+            sha1.update(&*chunk);
         }
-        let mut result = [0; 20];
-        sha1.result(&mut result);
+        let result = sha1.finalize();
         (Algorithm::Sha1, result.to_vec())
     })
 }
@@ -112,10 +109,9 @@ fn sha256_digest(rx: Receiver<Arc<Vec<u8>>>) -> JoinHandle<(Algorithm, Vec<u8>)>
     thread::spawn(move || {
         let mut sha256 = Sha256::new();
         while let Ok(chunk) = rx.recv() {
-            sha256.input(&chunk);
+            sha256.update(&*chunk);
         }
-        let mut result = [0; 32];
-        sha256.result(&mut result);
+        let result = sha256.finalize();
         (Algorithm::Sha256, result.to_vec())
     })
 }

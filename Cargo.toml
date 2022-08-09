@@ -7,9 +7,11 @@ edition = "2021"
 [dependencies]
 structopt = "0.3.26"
 hex = "0.4.3"
-rust-crypto = "0.2.36"
 crossbeam-channel = "0.5"
 termcolor = "1.1"
+sha2 = "0.10.2"
+sha1 = "0.10.1"
+md-5 = "0.10.1"
 
 [dependencies.copypasta]
 version = "0.8.1"
