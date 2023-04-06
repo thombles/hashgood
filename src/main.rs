@@ -12,6 +12,11 @@ mod display;
 /// Collect candidate hashes based on options and match them against a calculated hash
 mod verify;
 
+/// Problem running the program
+const EXIT_ERR: i32 = 1;
+/// Verification was performed and was not a match
+const EXIT_MISMATCH: i32 = 2;
+
 #[derive(StructOpt)]
 #[structopt(name = "hashgood")]
 pub struct Opt {
@@ -119,6 +124,7 @@ pub struct CandidateHashes {
 }
 
 /// Summary of an atetmpt to match the calculated digest against candidates
+#[derive(PartialEq)]
 pub enum MatchLevel {
     Ok,
     Maybe,
@@ -147,7 +153,7 @@ pub struct Verification<'a> {
 fn main() {
     hashgood().unwrap_or_else(|e| {
         eprintln!("Error: {}", e);
-        process::exit(1);
+        process::exit(EXIT_ERR);
     });
 }
 
@@ -164,6 +170,7 @@ fn hashgood() -> Result<(), Box<dyn Error>> {
             if c.alg == alg {
                 let hash = Hash::new(alg, bytes, &opt.input);
                 let verification = verify::verify_hash(&hash, &c);
+                let successful_match = verification.match_level == MatchLevel::Ok;
                 display::print_hash(
                     &hash,
                     verification.comparison_hash,
@@ -172,6 +179,9 @@ fn hashgood() -> Result<(), Box<dyn Error>> {
                 )?;
                 display::print_messages(verification.messages, opt.no_colour)?;
                 display::print_match_level(verification.match_level, opt.no_colour)?;
+                if !successful_match {
+                    process::exit(EXIT_MISMATCH);
+                }
             }
         }
     } else {
