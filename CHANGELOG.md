@@ -1,3 +1,7 @@
+## 0.4.0 - 2023-04-06
+
+* Returns exit code 2 if verification result is not OK
+
 ## 0.3.0 - 2022-08-09
 
 #### Changed
