@@ -19,6 +19,12 @@ This program arose from dissatisfaction with the [workarounds required for tradi
 
 ## Installing
 
+If you have a working Rust toolchain you can install `hashgood` from crates.io:
+
+```
+cargo install hashgood
+```
+
 Pre-compiled binaries for common platforms can be downloaded [from the releases page](https://github.com/thombles/hashgood/releases). Otherwise you can build it yourself; see the next section.
 
 ## Compiling
