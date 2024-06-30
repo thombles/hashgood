@@ -1,6 +1,4 @@
 use super::Algorithm;
-use crossbeam_channel::bounded;
-use crossbeam_channel::Receiver;
 use md5::{Digest, Md5};
 use sha1::Sha1;
 use sha2::Sha256;
@@ -8,6 +6,7 @@ use std::error::Error;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
+use std::sync::mpsc::{channel, Receiver};
 use std::sync::Arc;
 use std::thread;
 use std::thread::JoinHandle;
@@ -44,17 +43,17 @@ pub fn create_digests(algorithms: &[Algorithm], mut input: Box<dyn Read>) -> Cal
     let mut handles = vec![];
 
     if algorithms.contains(&Algorithm::Md5) {
-        let (s, r) = bounded::<Arc<Vec<u8>>>(1);
+        let (s, r) = channel();
         senders.push(s);
         handles.push(md5_digest(r));
     }
     if algorithms.contains(&Algorithm::Sha1) {
-        let (s, r) = bounded::<Arc<Vec<u8>>>(1);
+        let (s, r) = channel();
         senders.push(s);
         handles.push(sha1_digest(r));
     }
     if algorithms.contains(&Algorithm::Sha256) {
-        let (s, r) = bounded::<Arc<Vec<u8>>>(1);
+        let (s, r) = channel();
         senders.push(s);
         handles.push(sha256_digest(r));
     }

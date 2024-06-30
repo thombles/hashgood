@@ -12,11 +12,10 @@ readme = "README.md"
 [dependencies]
 structopt = "0.3.26"
 hex = "0.4.3"
-crossbeam-channel = "0.5"
-termcolor = "1.1"
-sha2 = "0.10.2"
-sha1 = "0.10.1"
-md-5 = "0.10.1"
+termcolor = "1.4"
+sha2 = "0.10"
+sha1 = "0.10"
+md-5 = "0.10"
 
 [dependencies.copypasta]
 version = "0.8.1"
