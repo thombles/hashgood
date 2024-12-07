@@ -43,6 +43,7 @@ pub enum Algorithm {
     Md5,
     Sha1,
     Sha256,
+    Sha512,
 }
 
 impl Algorithm {
@@ -52,6 +53,7 @@ impl Algorithm {
             16 => Ok(Algorithm::Md5),
             20 => Ok(Algorithm::Sha1),
             32 => Ok(Algorithm::Sha256),
+            64 => Ok(Algorithm::Sha512),
             _ => Err(format!("Unrecognised hash length: {} bytes", len)),
         }
     }
@@ -168,7 +170,12 @@ fn hashgood() -> Result<(), Box<dyn Error>> {
     } else {
         // If no candidate, calculate all three common digest types for output
         let hashes = calculate::create_digests(
-            &[Algorithm::Md5, Algorithm::Sha1, Algorithm::Sha256],
+            &[
+                Algorithm::Md5,
+                Algorithm::Sha1,
+                Algorithm::Sha256,
+                Algorithm::Sha512,
+            ],
             input,
         )?;
         for (alg, bytes) in hashes {

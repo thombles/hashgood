@@ -2,6 +2,7 @@ use super::Algorithm;
 use md5::{Digest, Md5};
 use sha1::Sha1;
 use sha2::Sha256;
+use sha2::Sha512;
 use std::error::Error;
 use std::fs::File;
 use std::io::prelude::*;
@@ -56,6 +57,11 @@ pub fn create_digests(algorithms: &[Algorithm], mut input: Box<dyn Read>) -> Cal
         let (s, r) = channel();
         senders.push(s);
         handles.push(sha256_digest(r));
+    }
+    if algorithms.contains(&Algorithm::Sha512) {
+        let (s, r) = channel();
+        senders.push(s);
+        handles.push(sha512_digest(r));
     }
 
     // 64 KB chunks will be read from the input at 64 KB and supplied to all hashing threads at once
@@ -112,6 +118,18 @@ fn sha256_digest(rx: Receiver<Arc<Vec<u8>>>) -> JoinHandle<(Algorithm, Vec<u8>)>
         }
         let result = sha256.finalize();
         (Algorithm::Sha256, result.to_vec())
+    })
+}
+
+/// Calculate the sha512 digest of some data on the given channel
+fn sha512_digest(rx: Receiver<Arc<Vec<u8>>>) -> JoinHandle<(Algorithm, Vec<u8>)> {
+    thread::spawn(move || {
+        let mut sha512 = Sha512::new();
+        while let Ok(chunk) = rx.recv() {
+            sha512.update(&*chunk);
+        }
+        let result = sha512.finalize();
+        (Algorithm::Sha512, result.to_vec())
     })
 }
 

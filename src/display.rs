@@ -21,7 +21,7 @@ fn get_stdout(no_colour: bool) -> StandardStream {
 }
 
 fn write_filename(mut stdout: &mut StandardStream, filename: &str) -> PrintResult {
-    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)).set_bold(true))?;
     write!(&mut stdout, "{}", filename_display(filename))?;
     stdout.reset()?;
     Ok(())
@@ -30,16 +30,20 @@ fn write_filename(mut stdout: &mut StandardStream, filename: &str) -> PrintResul
 fn write_algorithm(mut stdout: &mut StandardStream, alg: Algorithm) -> PrintResult {
     match alg {
         Algorithm::Md5 => {
-            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Magenta)))?;
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Magenta)).set_bold(true))?;
             write!(&mut stdout, "MD5")?;
         }
         Algorithm::Sha1 => {
-            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)).set_bold(true))?;
             write!(&mut stdout, "SHA-1")?;
         }
         Algorithm::Sha256 => {
-            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true))?;
             write!(&mut stdout, "SHA-256")?;
+        }
+        Algorithm::Sha512 => {
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Blue)).set_bold(true))?;
+            write!(&mut stdout, "SHA-512")?;
         }
     }
     stdout.reset()?;
@@ -49,9 +53,9 @@ fn write_algorithm(mut stdout: &mut StandardStream, alg: Algorithm) -> PrintResu
 fn print_hex_compare(print: &str, against: &str, mut stdout: &mut StandardStream) -> PrintResult {
     for (p, a) in print.chars().zip(against.chars()) {
         if p == a {
-            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true))?;
         } else {
-            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)).set_bold(true))?;
         }
         write!(&mut stdout, "{}", p)?;
     }
@@ -65,7 +69,7 @@ fn write_source(
     verify_source: &VerificationSource,
     candidate_filename: &Option<String>,
 ) -> PrintResult {
-    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+    stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)).set_bold(true))?;
     match &verify_source {
         VerificationSource::CommandArgument => {
             writeln!(&mut stdout, "command line argument")?;
@@ -170,15 +174,15 @@ pub fn print_match_level(match_level: MatchLevel, no_colour: bool) -> PrintResul
     write!(&mut stdout, "Result: ")?;
     match match_level {
         MatchLevel::Ok => {
-            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)))?;
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true))?;
             writeln!(&mut stdout, "OK")?;
         }
         MatchLevel::Maybe => {
-            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))?;
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)).set_bold(true))?;
             writeln!(&mut stdout, "MAYBE")?;
         }
         MatchLevel::Fail => {
-            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
+            stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)).set_bold(true))?;
             writeln!(&mut stdout, "FAIL")?;
         }
     }

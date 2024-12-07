@@ -254,6 +254,7 @@ mod tests {
         let valid_sha1 = "b314c7ebb7d599944981908b7f3ed33a30e78f3a";
         let valid_sha1_2 = valid_sha1.to_uppercase();
         let valid_sha256 = "1eb85fc97224598dad1852b5d6483bbcf0aa8608790dcc657a5a2a761ae9c8c6";
+        let valid_sha512 = "f4f7de1665cdcd00b2e526da6876f3e06a37da3549e9f880602f64407f602983a571c142eb0de0eacfc9c1d0f534e9339cdce04eb9daddc6ddfa8cf34853beed";
 
         let invalid1 = "x";
         let invalid2 = "a";
@@ -286,6 +287,13 @@ mod tests {
             read_raw_candidate_from_file(valid_sha256, example_path),
             Some(CandidateHashes {
                 alg: Algorithm::Sha256,
+                ..
+            })
+        ));
+        assert!(matches!(
+            read_raw_candidate_from_file(valid_sha512, example_path),
+            Some(CandidateHashes {
+                alg: Algorithm::Sha512,
                 ..
             })
         ));
