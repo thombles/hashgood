@@ -50,14 +50,18 @@ fn write_algorithm(mut stdout: &mut StandardStream, alg: Algorithm) -> PrintResu
     Ok(())
 }
 
-fn print_hex_compare(print: &str, against: &str, mut stdout: &mut StandardStream) -> PrintResult {
-    for (p, a) in print.chars().zip(against.chars()) {
-        if p == a {
+fn print_hex_compare(
+    print: &[u8],
+    matches: &[bool],
+    mut stdout: &mut StandardStream,
+) -> PrintResult {
+    for (p, m) in print.iter().zip(matches.iter()) {
+        if *m {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green)).set_bold(true))?;
         } else {
             stdout.set_color(ColorSpec::new().set_fg(Some(Color::Red)).set_bold(true))?;
         }
-        write!(&mut stdout, "{}", p)?;
+        write!(&mut stdout, "{:02x}", p)?;
     }
     stdout.reset()?;
     writeln!(&mut stdout)?;
@@ -104,6 +108,14 @@ fn write_source(
     Ok(())
 }
 
+fn calculate_match_indices(bytes1: &[u8], bytes2: &[u8]) -> Vec<bool> {
+    bytes1
+        .iter()
+        .zip(bytes2.iter())
+        .map(|(b1, b2)| b1 == b2)
+        .collect()
+}
+
 pub fn print_hash(
     hash: &Hash,
     verify_hash: Option<&CandidateHash>,
@@ -118,19 +130,18 @@ pub fn print_hash(
     writeln!(&mut stdout)?;
 
     // Handle basic case first - nothing to compare it to
-    let hash_hex = hex::encode(&hash.bytes);
     let verify_hash = match verify_hash {
         None => {
-            write!(&mut stdout, "{}\n\n", hash_hex)?;
+            write!(&mut stdout, "{}\n\n", hex::encode(&hash.bytes))?;
             return Ok(());
         }
         Some(verify_hash) => verify_hash,
     };
-    let other_hex = hex::encode(&verify_hash.bytes);
 
     // Do a top-to-bottom comparison
-    print_hex_compare(&hash_hex, &other_hex, &mut stdout)?;
-    print_hex_compare(&other_hex, &hash_hex, &mut stdout)?;
+    let matches = calculate_match_indices(&hash.bytes, &verify_hash.bytes);
+    print_hex_compare(&hash.bytes, &matches, &mut stdout)?;
+    print_hex_compare(&verify_hash.bytes, &matches, &mut stdout)?;
 
     // Show the source of our hash
     if let Some(source) = verify_source {
