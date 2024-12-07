@@ -20,11 +20,6 @@ const EXIT_MISMATCH: i32 = 2;
 #[derive(StructOpt)]
 #[structopt(name = "hashgood")]
 pub struct Opt {
-    /// Read the hash from the clipboard
-    #[cfg(feature = "paste")]
-    #[structopt(short = "p", long = "paste")]
-    paste: bool,
-
     /// Disable ANSI colours in output
     #[structopt(short = "C", long = "no-colour")]
     no_colour: bool,
@@ -40,19 +35,6 @@ pub struct Opt {
     /// A hash to verify, supplied directly on the command line
     #[structopt(name = "hash")]
     hash: Option<String>,
-}
-
-impl Opt {
-    fn get_paste(&self) -> bool {
-        #[cfg(feature = "paste")]
-        {
-            self.paste
-        }
-        #[cfg(not(feature = "paste"))]
-        {
-            false
-        }
-    }
 }
 
 /// Types of supported digest algorithm
@@ -79,7 +61,6 @@ impl Algorithm {
 #[derive(Debug, PartialEq)]
 pub enum VerificationSource {
     CommandArgument,
-    Clipboard,
     RawFile(String),
     DigestsFile(String),
 }
@@ -205,14 +186,10 @@ fn hashgood() -> Result<(), Box<dyn Error>> {
 /// Parse the command line options and check for ambiguous or inconsistent settings
 fn get_verified_options() -> Result<Opt, String> {
     let opt = Opt::from_args();
-    let hash_methods =
-        opt.hash.is_some() as i32 + opt.get_paste() as i32 + opt.hash_file.is_some() as i32;
+    let hash_methods = opt.hash.is_some() as i32 + opt.hash_file.is_some() as i32;
     if hash_methods > 1 {
         if opt.hash.is_some() {
             eprintln!("* specified as command line argument");
-        }
-        if opt.get_paste() {
-            eprintln!("* paste from clipboard (-p)")
         }
         if opt.hash_file.is_some() {
             eprintln!("* check hash from file (-c)")

@@ -16,10 +16,3 @@ termcolor = "1.4"
 sha2 = "0.10"
 sha1 = "0.10"
 md-5 = "0.10"
-
-[dependencies.copypasta]
-version = "0.8.1"
-optional = true
-
-[features]
-paste = ["copypasta"]

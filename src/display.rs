@@ -70,9 +70,6 @@ fn write_source(
         VerificationSource::CommandArgument => {
             writeln!(&mut stdout, "command line argument")?;
         }
-        VerificationSource::Clipboard => {
-            writeln!(&mut stdout, "pasted from clipboard")?;
-        }
         VerificationSource::RawFile(raw_path) => match raw_path.as_str() {
             "-" => {
                 writeln!(&mut stdout, "from standard input")?;

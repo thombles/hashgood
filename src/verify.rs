@@ -2,8 +2,6 @@ use super::{
     Algorithm, CandidateHash, CandidateHashes, Hash, MatchLevel, MessageLevel, Opt, Verification,
     VerificationSource,
 };
-#[cfg(feature = "paste")]
-use copypasta::{ClipboardContext, ClipboardProvider};
 use std::fs::File;
 use std::io;
 use std::io::prelude::*;
@@ -16,8 +14,6 @@ use std::path::Path;
 pub fn get_candidate_hashes(opt: &Opt) -> Result<Option<CandidateHashes>, String> {
     if let Some(hash_string) = &opt.hash {
         return Ok(Some(get_by_parameter(hash_string)?));
-    } else if opt.get_paste() {
-        return Ok(Some(get_from_clipboard()?));
     } else if let Some(hash_file) = &opt.hash_file {
         return Ok(Some(get_from_file(hash_file)?));
     }
@@ -38,39 +34,6 @@ fn get_by_parameter(param: &str) -> Result<CandidateHashes, String> {
         hashes: vec![candidate],
         source: VerificationSource::CommandArgument,
     })
-}
-
-/// Generate a candidate hash from the system clipboard, or throw an error.
-fn get_from_clipboard() -> Result<CandidateHashes, String> {
-    #[cfg(feature = "paste")]
-    {
-        let mut ctx: ClipboardContext = match ClipboardContext::new() {
-            Ok(ctx) => ctx,
-            Err(e) => return Err(format!("Error getting system clipboard: {}", e)),
-        };
-
-        let possible_hash = match ctx.get_contents() {
-            Ok(value) => value,
-            Err(e) => format!("Error reading from clipboard: {}", e),
-        };
-
-        let bytes = hex::decode(&possible_hash)
-            .map_err(|_| "Clipboard contains invalid or truncated hex".to_owned())?;
-        let alg = Algorithm::from_len(bytes.len())?;
-        let candidate = CandidateHash {
-            filename: None,
-            bytes,
-        };
-        Ok(CandidateHashes {
-            alg,
-            hashes: vec![candidate],
-            source: VerificationSource::Clipboard,
-        })
-    }
-    #[cfg(not(feature = "paste"))]
-    {
-        Err("Paste not implemented".to_owned())
-    }
 }
 
 /// Generate a candidate hash from the digests file specified (could be "-" for STDIN), or throw an error.
