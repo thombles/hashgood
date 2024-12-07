@@ -68,6 +68,22 @@ fn print_hex_compare(
     Ok(())
 }
 
+fn print_pointer_line(
+    matches: &[bool],
+    marker: &str,
+    mut stdout: &mut StandardStream,
+) -> PrintResult {
+    for m in matches {
+        if *m {
+            write!(&mut stdout, "  ")?;
+        } else {
+            write!(&mut stdout, "{}{}", marker, marker)?;
+        }
+    }
+    write!(&mut stdout, "\n")?;
+    Ok(())
+}
+
 fn write_source(
     mut stdout: &mut StandardStream,
     verify_source: &VerificationSource,
@@ -140,8 +156,16 @@ pub fn print_hash(
 
     // Do a top-to-bottom comparison
     let matches = calculate_match_indices(&hash.bytes, &verify_hash.bytes);
+    let any_wrong = matches.iter().any(|m| !*m);
+
+    if any_wrong && no_colour {
+        print_pointer_line(&matches, "v", &mut stdout)?;
+    }
     print_hex_compare(&hash.bytes, &matches, &mut stdout)?;
     print_hex_compare(&verify_hash.bytes, &matches, &mut stdout)?;
+    if any_wrong && no_colour {
+        print_pointer_line(&matches, "^", &mut stdout)?;
+    }
 
     // Show the source of our hash
     if let Some(source) = verify_source {
