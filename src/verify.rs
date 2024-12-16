@@ -23,7 +23,7 @@ pub fn get_candidate_hashes(opt: &Opt) -> Result<Option<CandidateHashes>, String
 /// Generate a candidate hash from the provided command line parameter, or throw an error.
 fn get_by_parameter(param: &str) -> Result<CandidateHashes, String> {
     let bytes =
-        hex::decode(&param).map_err(|_| "Provided hash is invalid or truncated hex".to_owned())?;
+        hex::decode(param).map_err(|_| "Provided hash is invalid or truncated hex".to_owned())?;
     let alg = Algorithm::from_len(bytes.len())?;
     let candidate = CandidateHash {
         filename: None,
@@ -299,7 +299,7 @@ mod tests {
         ));
 
         for i in &[invalid1, invalid2, invalid3, invalid4, invalid5] {
-            assert!(read_raw_candidate_from_file(*i, example_path).is_none());
+            assert!(read_raw_candidate_from_file(i, example_path).is_none());
         }
     }
 

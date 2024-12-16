@@ -157,7 +157,7 @@ mod tests {
         "b9193853f7798e92e2f6b82eda336fa7d6fc0fa90fdefe665f372b0bad8cdf8c";
 
     fn verify_digest(alg: Algorithm, data: &'static [u8], hash: &str) {
-        let reader = Cursor::new(&*data);
+        let reader = Cursor::new(data);
         let digests = create_digests(&[alg], Box::new(reader)).unwrap();
         assert_eq!(digests.len(), 1);
         assert_eq!(digests[0], (alg, hex::decode(hash).unwrap()));
