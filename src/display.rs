@@ -80,7 +80,7 @@ fn print_pointer_line(
             write!(&mut stdout, "{}{}", marker, marker)?;
         }
     }
-    write!(&mut stdout, "\n")?;
+    writeln!(&mut stdout)?;
     Ok(())
 }
 
