@@ -1,4 +1,13 @@
-# hashgood
+## hashgood has moved!
+
+_16 December 2024_
+
+This project is still active and maintained but it is no longer hosted on GitHub. The next release v0.5.0 is available at the new location:
+
+* [Website with documentation and binary downloads](https://octet-stream.net/p/hashgood/)
+* [New git repo](https://code.octet-stream.net/hashgood)
+
+## hashgood
 A CLI tool for easily verifying a downloaded file's checksum.
 
 Wouldn't it be nice if your computer compared the hash for you?
