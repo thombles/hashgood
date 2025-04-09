@@ -1,3 +1,10 @@
+## 0.5.0 - 2024-12-16
+
+* SHA512 hashes are now supported.
+* When colour output is disabled, ASCII markers highlight any hash mismatches.
+* Native Linux ARM64 binary release now available.
+* Native signed and notarised Mac package now available.
+
 ## 0.4.0 - 2023-04-06
 
 * Returns exit code 2 if verification result is not OK
