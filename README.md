@@ -1,3 +1,7 @@
+## `hashgood` has moved!
+
+Please see the new project site: [https://octet-stream.net/p/hashgood/](https://octet-stream.net/p/hashgood/)
+
 # hashgood
 
 A CLI tool for easily verifying a downloaded file's checksum.
