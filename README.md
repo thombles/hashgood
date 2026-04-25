@@ -12,7 +12,7 @@ Compare a file with an MD5, SHA1, SHA256 or SHA512 hash:
 
 ![screenshot](https://github.com/user-attachments/assets/def91342-5050-4ee2-9090-518be094f9a0)
 
-This program arose from dissatisfaction with the [workarounds required for traditional tools](https://thomask.sdf.org/blog/2019/05/05/techniques-for-verifying-shasums-conveniently.html).
+This program arose from dissatisfaction with the [workarounds required for traditional tools](https://octet-stream.net/b/tdu/blog/2019/05/05/techniques-for-verifying-shasums-conveniently.html).
 
 ## Installation
 
