@@ -22,8 +22,8 @@ pub fn get_candidate_hashes(opt: &Opt) -> Result<Option<CandidateHashes>, String
 
 /// Generate a candidate hash from the provided command line parameter, or throw an error.
 fn get_by_parameter(param: &str) -> Result<CandidateHashes, String> {
-    let bytes =
-        hex::decode(param).map_err(|_| "Provided hash is invalid or truncated hex".to_owned())?;
+    let bytes = hex::decode(normalise_hash_input(param))
+        .map_err(|_| "Provided hash is invalid or truncated hex".to_owned())?;
     let alg = Algorithm::from_len(bytes.len())?;
     let candidate = CandidateHash {
         filename: None,
@@ -80,8 +80,14 @@ fn get_from_file(path: &Path) -> Result<CandidateHashes, String> {
     ))
 }
 
+fn normalise_hash_input(s: &str) -> &str {
+    let trimmed = s.trim();
+    // GitHub release page "copy to clipboard" includes this prefix
+    trimmed.strip_prefix("sha256:").unwrap_or(trimmed)
+}
+
 fn try_parse_hash(s: &str) -> Option<(Algorithm, Vec<u8>)> {
-    let bytes = match hex::decode(s.trim()) {
+    let bytes = match hex::decode(normalise_hash_input(s)) {
         Ok(bytes) => bytes,
         _ => return None,
     };
@@ -254,6 +260,7 @@ mod tests {
         let valid_sha1 = "b314c7ebb7d599944981908b7f3ed33a30e78f3a";
         let valid_sha1_2 = valid_sha1.to_uppercase();
         let valid_sha256 = "1eb85fc97224598dad1852b5d6483bbcf0aa8608790dcc657a5a2a761ae9c8c6";
+        let valid_sha256_prefixed = format!("sha256:{}", valid_sha256);
         let valid_sha512 = "f4f7de1665cdcd00b2e526da6876f3e06a37da3549e9f880602f64407f602983a571c142eb0de0eacfc9c1d0f534e9339cdce04eb9daddc6ddfa8cf34853beed";
 
         let invalid1 = "x";
@@ -285,6 +292,13 @@ mod tests {
         ));
         assert!(matches!(
             read_raw_candidate_from_file(valid_sha256, example_path),
+            Some(CandidateHashes {
+                alg: Algorithm::Sha256,
+                ..
+            })
+        ));
+        assert!(matches!(
+            read_raw_candidate_from_file(&valid_sha256_prefixed, example_path),
             Some(CandidateHashes {
                 alg: Algorithm::Sha256,
                 ..
